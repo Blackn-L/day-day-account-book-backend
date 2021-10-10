@@ -22,14 +22,33 @@ module.exports = (appInfo) => {
   const userConfig = {
     // myAppName: 'egg',
   };
-
+  
+  exports.mysql = {
+    // 单数据库信息配置
+    client: {
+      // host
+      host: "localhost",
+      // 端口号
+      port: "3306",
+      // 用户名
+      user: "root",
+      // 密码
+      password: "1234pocket",
+      // 数据库名
+      database: "local-pocket-book",
+    },
+    // 是否加载到 app 上，默认开启
+    app: true,
+    // 是否加载到 agent 上，默认关闭
+    agent: false,
+  };
   // 设置跨域白名单，允许全部
   config.security = {
     csrf: {
       enable: false,
       ignoreJSON: true,
     },
-    domainWhiteList: ["*"]
+    domainWhiteList: ["*"],
   };
 
   return {
