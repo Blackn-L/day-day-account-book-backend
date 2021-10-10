@@ -6,6 +6,7 @@ class UserController extends Controller {
   async register() {
     const { ctx } = this;
     const { username, password } = ctx.request.body;
+
     // 账号密码为空
     if (!username || !password) {
       ctx.body = {
@@ -41,7 +42,7 @@ class UserController extends Controller {
       };
     } else {
       ctx.body = {
-        code: 200,
+        code: 500,
         message: "注册失败（当然我也不知道为啥失败）",
         data: null,
       };

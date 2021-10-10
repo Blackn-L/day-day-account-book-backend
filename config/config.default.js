@@ -22,7 +22,7 @@ module.exports = (appInfo) => {
   const userConfig = {
     // myAppName: 'egg',
   };
-  
+
   exports.mysql = {
     // 单数据库信息配置
     client: {
@@ -33,9 +33,9 @@ module.exports = (appInfo) => {
       // 用户名
       user: "root",
       // 密码
-      password: "1234pocket",
+      password: "1234pocketbook",
       // 数据库名
-      database: "local-pocket-book",
+      database: "pocket-book",
     },
     // 是否加载到 app 上，默认开启
     app: true,
