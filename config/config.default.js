@@ -50,6 +50,10 @@ module.exports = (appInfo) => {
     },
     domainWhiteList: ["*"],
   };
+  // token配置
+  config.jwt = {
+    secret: 'Blackn',
+  };
 
   return {
     ...config,
