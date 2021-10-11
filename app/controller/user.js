@@ -48,6 +48,54 @@ class UserController extends Controller {
       };
     }
   }
+
+  // 登录
+  async login() {
+    const { ctx, app } = this;
+    const { username, password } = ctx.request.body;
+    // 账号密码都要填
+    if (!username || !password) {
+      ctx.body = {
+        code: 500,
+        message: "账号/密码不能为空",
+        data: null,
+      };
+      return;
+    }
+    const userInfo = await ctx.service.user.getUserByName(username);
+    // 无该用户
+    if (!userInfo?.id) {
+      ctx.body = {
+        code: 500,
+        message: "该用户不存在",
+        data: null,
+      };
+      return;
+    }
+    // 判断密码是否正确
+    if (userInfo?.password !== password) {
+      ctx.body = {
+        code: 500,
+        message: "密码错误",
+        data: null,
+      };
+      return;
+    }
+
+    const token = app.jwt.sign(
+      {
+        id: userInfo.id,
+        username: userInfo.username,
+        exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60, // 有效期 24H
+      },
+      app.config.jwt.secret
+    );
+    ctx.body = {
+      code: 200,
+      message: "登录成功",
+      data: token,
+    };
+  }
 }
 
 module.exports = UserController;

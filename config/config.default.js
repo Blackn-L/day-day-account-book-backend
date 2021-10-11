@@ -23,8 +23,8 @@ module.exports = (appInfo) => {
     // myAppName: 'egg',
   };
 
-  exports.mysql = {
-    // 单数据库信息配置
+  // 单个数据库信息配置
+  config.mysql = {
     client: {
       // host
       host: "localhost",
@@ -42,6 +42,7 @@ module.exports = (appInfo) => {
     // 是否加载到 agent 上，默认关闭
     agent: false,
   };
+
   // 设置跨域白名单，允许全部
   config.security = {
     csrf: {
@@ -50,9 +51,10 @@ module.exports = (appInfo) => {
     },
     domainWhiteList: ["*"],
   };
+  
   // token配置
   config.jwt = {
-    secret: 'Blackn',
+    secret: "Blackn",
   };
 
   return {
