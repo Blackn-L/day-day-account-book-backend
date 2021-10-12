@@ -93,7 +93,20 @@ class UserController extends Controller {
     ctx.body = {
       code: 200,
       message: "登录成功",
-      data: token,
+      data: { token },
+    };
+  }
+
+  // 获取用户信息
+  async getUserInfo() {
+    const { ctx, app } = this;
+    const token = ctx.request.header.authorization;
+    const decode = await app.jwt.verify(token, app.config.jwt.secret);
+    const userInfo = await ctx.service.user.getUserByName(decode.username);
+    ctx.body = {
+      code: 200,
+      message: "获取用户信息成功",
+      data: userInfo,
     };
   }
 }
