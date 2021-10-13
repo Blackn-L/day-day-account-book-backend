@@ -109,6 +109,34 @@ class UserController extends Controller {
       data: userInfo,
     };
   }
+
+  // 编辑用户信息
+  async editUserInfo() {
+    const { ctx, app } = this;
+    const token = ctx.request.header.authorization;
+    const { signature = "" } = ctx.request.body;
+    try {
+      const decode = await app.jwt.verify(token, app.config.jwt.secret);
+      if (!decode) return;
+      const userInfo = await ctx.service.user.getUserByName(decode.username);
+      if (!userInfo) return;
+      const result = await ctx.service.user.editUserInfo({
+        ...userInfo,
+        signature,
+      });
+      ctx.body = {
+        code: 200,
+        message: "编辑用户信息成功",
+        data: {
+          id: userInfo.id,
+          username: userInfo.username,
+          signature,
+        },
+      };
+    } catch (error) {
+      console.log(error);
+    }
+  }
 }
 
 module.exports = UserController;
