@@ -10,7 +10,7 @@ module.exports = (secret) => {
         console.log("error", error);
         ctx.status = 200;
         ctx.body = {
-          msg: "token已过期，请重新登录",
+          message: "token已过期，请重新登录",
           code: 401,
         };
         return;
@@ -19,7 +19,7 @@ module.exports = (secret) => {
       ctx.status = 200;
       ctx.body = {
         code: 401,
-        msg: "token不存在",
+        message: "token不存在",
       };
       return;
     }
