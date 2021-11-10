@@ -52,23 +52,22 @@ class BillController extends Controller {
   // 获取账单列表
   async list() {
     const { ctx, app } = this;
-    const { date, page = 1, page_size = 5, type_id = "all" } = ctx.query;
+    const { date, page = 1, page_size = 5, type_id = 0 } = ctx.query;
     try {
       const token = ctx.request.header.authorization;
-      console.log("token: ", token);
       const decode = await app.jwt.verify(token, app.config.jwt.secret);
       if (!decode) return;
       const user_id = decode.id;
       const list = await ctx.service.bill.list(user_id);
       // 过滤出月份和类型所对应的账单列表
+      const _date = moment(Number(date)).format("YYYY-MM");
       const _list = list.filter((item) => {
-        if (type_id != "all") {
+        if (type_id != 0)
           return (
-            moment(Number(item.date)).format("YYYY-MM") == date &&
+            moment(Number(item.date)).format("YYYY-MM") == _date &&
             type_id == item.type_id
           );
-        }
-        return moment(Number(item.date)).format("YYYY-MM") == date;
+        return moment(Number(item.date)).format("YYYY-MM") == _date;
       });
       // 格式化数据
       let listMap = _list
@@ -98,7 +97,7 @@ class BillController extends Controller {
           return curr;
         }, [])
         .sort((a, b) => moment(b.date) - moment(a.date)); // 时间顺序为倒叙，时间约新的，在越上面
-      // 分页处理，listMap 为我们格式化后的全部数据，还未分页。
+      // 分页处理，listMap 为我们格式化后的全部数据，还未分页
       const filterListMap = listMap.slice(
         (page - 1) * page_size,
         page * page_size
@@ -107,7 +106,7 @@ class BillController extends Controller {
       // 计算当月总收入和支出
       // 首先获取当月所有账单列表
       let __list = list.filter(
-        (item) => moment(Number(item.date)).format("YYYY-MM") == date
+        (item) => moment(Number(item.date)).format("YYYY-MM") == _date
       );
       // 累加计算支出
       let totalExpense = __list.reduce((curr, item) => {
