@@ -110,7 +110,11 @@ class BillController extends Controller {
       );
       // 累加计算支出
       let totalExpense = __list.reduce((curr, item) => {
-        if (item.pay_type == 1) {
+        // type_id 为 0则全部累加，否则只累加对应类型的
+        if (
+          item.pay_type == 1 &&
+          (!Number(type_id) || item.type_id == type_id)
+        ) {
           curr += Number(item.amount);
           return curr;
         }
@@ -118,7 +122,11 @@ class BillController extends Controller {
       }, 0);
       // 累加计算收入
       let totalIncome = __list.reduce((curr, item) => {
-        if (item.pay_type == 2) {
+        // type_id 为 0则全部累加，否则只累加对应类型的
+        if (
+          item.pay_type == 2 &&
+          (!Number(type_id) || item.type_id == type_id)
+        ) {
           curr += Number(item.amount);
           return curr;
         }
@@ -130,9 +138,9 @@ class BillController extends Controller {
         code: 200,
         message: "请求成功",
         data: {
-          totalExpense, // 当月支出
-          totalIncome, // 当月收入
-          totalPage: Math.ceil(listMap.length / page_size), // 总分页
+          totalExpense, // 当月总支出
+          totalIncome, // 当月总收入
+          totalPage: Math.ceil(listMap.length / page_size), // 总页数
           list: filterListMap || [], // 格式化后，并且经过分页处理的数据
         },
       };
