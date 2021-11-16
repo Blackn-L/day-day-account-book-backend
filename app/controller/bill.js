@@ -169,7 +169,7 @@ class BillController extends Controller {
     if (!id) {
       ctx.body = {
         code: 500,
-        message: "订单id不能为空",
+        message: "账单id不能为空",
         data: null,
       };
       return;
@@ -231,11 +231,66 @@ class BillController extends Controller {
         remark, // 备注
         user_id, // 用户 id
       });
+      if (result?.affectedRows === 1) {
+        ctx.body = {
+          code: 200,
+          message: "更新成功",
+          data: null,
+        };
+      } else {
+        ctx.body = {
+          code: 500,
+          message: "未找到该账单或服务器错误",
+          data: null,
+        };
+      }
+    } catch (error) {
       ctx.body = {
-        code: 200,
-        message: "请求成功",
+        code: 500,
+        message: error,
         data: null,
       };
+    }
+  }
+
+  // 删除账单
+  async delete() {
+    const { ctx, app } = this;
+    // 获取账单 id 参数
+    const { id = "" } = ctx.query;
+    // 获取用户 user_id
+    let user_id;
+    const token = ctx.request.header.authorization;
+    // 获取当前用户信息
+    const decode = await app.jwt.verify(token, app.config.jwt.secret);
+    if (!decode) return;
+    user_id = decode.id;
+    // 判断是否传入账单 id
+    if (!id) {
+      ctx.body = {
+        code: 500,
+        message: "账单id不能为空",
+        data: null,
+      };
+      return;
+    }
+
+    try {
+      // 删除数据库账单详情，逻辑删除，delete_flag 置为 1
+      const result = await ctx.service.bill.delete(id);
+      if (result?.affectedRows === 1) {
+        ctx.body = {
+          code: 200,
+          message: "删除成功",
+          data: null,
+        };
+      } else {
+        ctx.body = {
+          code: 500,
+          message: "未找到该账单或服务器错误",
+          data: null,
+        };
+      }
     } catch (error) {
       ctx.body = {
         code: 500,
