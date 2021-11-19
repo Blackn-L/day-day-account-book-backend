@@ -1,5 +1,5 @@
 const Controller = require("egg").Controller;
-const moment = require("moment");
+const dayjs = require("dayjs");
 class BillController extends Controller {
   // 新增账单
   async add() {
@@ -60,21 +60,21 @@ class BillController extends Controller {
       const user_id = decode.id;
       const list = await ctx.service.bill.list(user_id);
       // 过滤出月份和类型所对应的账单列表
-      const _date = moment(Number(date)).format("YYYY-MM");
+      const _date = dayjs(Number(date)).format("YYYY-MM");
       const _list = list.filter((item) => {
         if (type_id != 0)
           return (
-            moment(Number(item.date)).format("YYYY-MM") == _date &&
+            dayjs(Number(item.date)).format("YYYY-MM") == _date &&
             type_id == item.type_id
           );
-        return moment(Number(item.date)).format("YYYY-MM") == _date;
+        return dayjs(Number(item.date)).format("YYYY-MM") == _date;
       });
       // 格式化数据
       let listMap = _list
         .reduce((curr, item) => {
           // curr 默认初始值是一个空数组 []
           // 把第一个账单项的时间格式化为 YYYY-MM-DD
-          const date = moment(Number(item.date)).format("YYYY-MM-DD");
+          const date = dayjs(Number(item.date)).format("YYYY-MM-DD");
           // 如果能在累加的数组中找到当前项日期 date，那么在数组中的加入当前项到 bills 数组。
           if (curr?.findIndex((item) => item.date == date) > -1) {
             const index = curr.findIndex((item) => item.date == date);
@@ -96,7 +96,7 @@ class BillController extends Controller {
           }
           return curr;
         }, [])
-        .sort((a, b) => moment(b.date) - moment(a.date)); // 时间顺序为倒叙，时间约新的，在越上面
+        .sort((a, b) => dayjs(b.date) - dayjs(a.date)); // 时间顺序为倒叙，时间约新的，在越上面
       // 分页处理，listMap 为我们格式化后的全部数据，还未分页
       const filterListMap = listMap.slice(
         (page - 1) * page_size,
@@ -106,7 +106,7 @@ class BillController extends Controller {
       // 计算当月总收入和支出
       // 首先获取当月所有账单列表
       let __list = list.filter(
-        (item) => moment(Number(item.date)).format("YYYY-MM") == _date
+        (item) => dayjs(Number(item.date)).format("YYYY-MM") == _date
       );
       // 累加计算支出
       let totalExpense = __list.reduce((curr, item) => {
@@ -291,6 +291,28 @@ class BillController extends Controller {
           data: null,
         };
       }
+    } catch (error) {
+      ctx.body = {
+        code: 500,
+        message: error,
+        data: null,
+      };
+    }
+  }
+
+  // 获取月账单数据
+  async date() {
+    const { ctx, app } = this;
+    const { date = "" } = ctx.query;
+    try {
+      const token = ctx.request.header.authorization;
+      const decode = await app.jwt.verify(token, app.config.jwt.secret);
+      if (!decode) return;
+      const user_id = decode.id;
+      const result = await ctx.service.bill.list(user_id);
+      // 根据时间参数，筛选出当月所有的账单数据
+      const start = dayjs(date).startOf("month").unix() * 1000; // 选择月份，月初时间
+      const end = dayjs(date).endOf("month").unix() * 1000; // 选择月份，月末时间
     } catch (error) {
       ctx.body = {
         code: 500,
