@@ -307,12 +307,58 @@ class BillController extends Controller {
     try {
       const token = ctx.request.header.authorization;
       const decode = await app.jwt.verify(token, app.config.jwt.secret);
-      if (!decode) return;
+      if (!decode || !date) return;
       const user_id = decode.id;
       const result = await ctx.service.bill.list(user_id);
       // 根据时间参数，筛选出当月所有的账单数据
       const start = dayjs(date).startOf("month").unix() * 1000; // 选择月份，月初时间
       const end = dayjs(date).endOf("month").unix() * 1000; // 选择月份，月末时间
+      const _monthData = result.filter(
+        (item) => Number(item.date) >= start && Number(item.date) <= end
+      );
+      const expenseMap = new Map();
+      const incomeMap = new Map();
+      let totalExpense = 0;
+      let totalIncome = 0;
+      // console.log("_monthData: ", _monthData);
+      _monthData.forEach((item) => {
+        if (item.pay_type === 1) {
+          totalExpense += Number(item.amount);
+          expenseMap.set(item.type_id, {
+            totalAmount: expenseMap.has(item.type_id)
+              ? Number(expenseMap.get(item.type_id).totalAmount) +
+                Number(item.amount)
+              : Number(item.amount),
+            typeName: item.type_name,
+            typeId: item.type_id,
+          });
+        } else {
+          totalIncome += Number(item.amount);
+          incomeMap.set(item.type_id, {
+            totalAmount: incomeMap.has(item.type_id)
+              ? Number(incomeMap.get(item.type_id).totalAmount) +
+                Number(item.amount)
+              : Number(item.amount),
+            typeName: item.type_name,
+            typeId: item.type_id,
+          });
+        }
+      });
+      console.log("expenseMap: ", expenseMap);
+      ctx.body = {
+        code: 200,
+        message: "请求成功",
+        data: {
+          expenseList: [...expenseMap.values()].sort(
+            (a, b) => b.totalAmount - a.totalAmount
+          ),
+          incomeList: [...incomeMap.values()].sort(
+            (a, b) => b.totalAmount - a.totalAmount
+          ),
+          totalExpense,
+          totalIncome,
+        },
+      };
     } catch (error) {
       ctx.body = {
         code: 500,
