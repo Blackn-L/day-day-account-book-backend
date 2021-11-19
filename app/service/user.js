@@ -2,7 +2,7 @@ const Service = require("egg").Service;
 
 class UserService extends Service {
   // 通过用户名获取用户信息
-  async getUserByName(username) {
+  async get(username) {
     const { app } = this;
     try {
       const result = await app.mysql.get("user", { username });
@@ -26,13 +26,13 @@ class UserService extends Service {
   }
 
   // 编辑用户信息
-  async editUserInfo(userInfo) {
+  async edit(user_info) {
     const { app } = this;
     try {
       const result = await app.mysql.update(
         "user",
-        { ...userInfo },
-        { id: userInfo.id }
+        { ...user_info },
+        { id: user_info.id }
       );
       return result;
     } catch (error) {

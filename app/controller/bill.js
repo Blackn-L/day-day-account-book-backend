@@ -1,6 +1,6 @@
-const Controller = require("egg").Controller;
+const BaseController = require("./BaseController");
 const dayjs = require("dayjs");
-class BillController extends Controller {
+class BillController extends BaseController {
   // 新增账单
   async add() {
     const { ctx, app } = this;
@@ -14,11 +14,7 @@ class BillController extends Controller {
     } = ctx.request.body;
 
     if (!amount || !type_id || !type_name || !date || !pay_type) {
-      ctx.body = {
-        code: 400,
-        message: "参数错误",
-        data: null,
-      };
+      this.paramsError();
       return;
     }
     const token = ctx.request.header.authorization;
@@ -35,17 +31,9 @@ class BillController extends Controller {
         remark,
         user_id,
       });
-      ctx.body = {
-        code: 200,
-        message: "新增成功",
-        data: null,
-      };
+      this.success(null, "新增成功");
     } catch (error) {
-      ctx.body = {
-        code: 500,
-        message: error,
-        data: null,
-      };
+      this.serviceError();
     }
   }
 
@@ -70,7 +58,7 @@ class BillController extends Controller {
         return dayjs(Number(item.date)).format("YYYY-MM") == _date;
       });
       // 格式化数据
-      let listMap = _list
+      let list_map = _list
         .reduce((curr, item) => {
           // curr 默认初始值是一个空数组 []
           // 把第一个账单项的时间格式化为 YYYY-MM-DD
@@ -97,8 +85,8 @@ class BillController extends Controller {
           return curr;
         }, [])
         .sort((a, b) => dayjs(b.date) - dayjs(a.date)); // 时间顺序为倒叙，时间约新的，在越上面
-      // 分页处理，listMap 为我们格式化后的全部数据，还未分页
-      const filterListMap = listMap.slice(
+      // 分页处理，list_map 为我们格式化后的全部数据，还未分页
+      const filter_list_map = list_map.slice(
         (page - 1) * page_size,
         page * page_size
       );
@@ -109,7 +97,7 @@ class BillController extends Controller {
         (item) => dayjs(Number(item.date)).format("YYYY-MM") == _date
       );
       // 累加计算支出
-      let totalExpense = __list.reduce((curr, item) => {
+      let total_expense = __list.reduce((curr, item) => {
         // type_id 为 0则全部累加，否则只累加对应类型的
         if (
           item.pay_type == 1 &&
@@ -121,7 +109,7 @@ class BillController extends Controller {
         return curr;
       }, 0);
       // 累加计算收入
-      let totalIncome = __list.reduce((curr, item) => {
+      let total_income = __list.reduce((curr, item) => {
         // type_id 为 0则全部累加，否则只累加对应类型的
         if (
           item.pay_type == 2 &&
@@ -134,22 +122,15 @@ class BillController extends Controller {
       }, 0);
 
       // 返回数据
-      ctx.body = {
-        code: 200,
-        message: "请求成功",
-        data: {
-          totalExpense, // 当月总支出
-          totalIncome, // 当月总收入
-          totalPage: Math.ceil(listMap.length / page_size), // 总页数
-          list: filterListMap || [], // 格式化后，并且经过分页处理的数据
-        },
+      const data = {
+        total_expense, // 当月总支出
+        total_income, // 当月总收入
+        total_page: Math.ceil(list_map.length / page_size), // 总页数
+        list: filter_list_map || [], // 格式化后，并且经过分页处理的数据
       };
+      this.success(data);
     } catch (error) {
-      ctx.body = {
-        code: 500,
-        message: error,
-        data: null,
-      };
+      this.serviceError();
     }
   }
 
@@ -167,28 +148,16 @@ class BillController extends Controller {
     user_id = decode.id;
     // 判断是否传入账单 id
     if (!id) {
-      ctx.body = {
-        code: 500,
-        message: "账单id不能为空",
-        data: null,
-      };
+      this.paramsError("账单id不能为空");
       return;
     }
 
     try {
       // 从数据库获取账单详情
       const detail = await ctx.service.bill.detail(id, user_id);
-      ctx.body = {
-        code: 200,
-        message: "请求成功",
-        data: detail,
-      };
+      this.success(detail);
     } catch (error) {
-      ctx.body = {
-        code: 500,
-        message: error,
-        data: null,
-      };
+      this.serviceError();
     }
   }
 
@@ -207,11 +176,7 @@ class BillController extends Controller {
     } = ctx.request.body;
     // 都必须有值
     if (!amount || !type_id || !type_name || !date || !pay_type) {
-      ctx.body = {
-        code: 400,
-        message: "参数错误",
-        data: null,
-      };
+      this.paramsError("参数不能为空");
     }
 
     try {
@@ -232,24 +197,12 @@ class BillController extends Controller {
         user_id, // 用户 id
       });
       if (result?.affectedRows === 1) {
-        ctx.body = {
-          code: 200,
-          message: "更新成功",
-          data: null,
-        };
+        this.success(null, "更新成功");
       } else {
-        ctx.body = {
-          code: 500,
-          message: "未找到该账单或服务器错误",
-          data: null,
-        };
+        this.serviceError("未找到该账单或服务器错误");
       }
     } catch (error) {
-      ctx.body = {
-        code: 500,
-        message: error,
-        data: null,
-      };
+      this.serviceError();
     }
   }
 
@@ -267,11 +220,7 @@ class BillController extends Controller {
     user_id = decode.id;
     // 判断是否传入账单 id
     if (!id) {
-      ctx.body = {
-        code: 500,
-        message: "账单id不能为空",
-        data: null,
-      };
+      this.paramsError("账单id不能为空");
       return;
     }
 
@@ -279,24 +228,12 @@ class BillController extends Controller {
       // 删除数据库账单详情，逻辑删除，delete_flag 置为 1
       const result = await ctx.service.bill.delete(id);
       if (result?.affectedRows === 1) {
-        ctx.body = {
-          code: 200,
-          message: "删除成功",
-          data: null,
-        };
+        this.success(null, "删除成功");
       } else {
-        ctx.body = {
-          code: 500,
-          message: "未找到该账单或服务器错误",
-          data: null,
-        };
+        this.serviceError("未找到该账单或服务器错误");
       }
     } catch (error) {
-      ctx.body = {
-        code: 500,
-        message: error,
-        data: null,
-      };
+      this.serviceError();
     }
   }
 
@@ -316,55 +253,46 @@ class BillController extends Controller {
       const _monthData = result.filter(
         (item) => Number(item.date) >= start && Number(item.date) <= end
       );
-      const expenseMap = new Map();
-      const incomeMap = new Map();
-      let totalExpense = 0;
-      let totalIncome = 0;
-      // console.log("_monthData: ", _monthData);
+      const expense_map = new Map();
+      const income_map = new Map();
+      let total_expense = 0;
+      let total_income = 0;
       _monthData.forEach((item) => {
         if (item.pay_type === 1) {
-          totalExpense += Number(item.amount);
-          expenseMap.set(item.type_id, {
-            totalAmount: expenseMap.has(item.type_id)
-              ? Number(expenseMap.get(item.type_id).totalAmount) +
+          total_expense += Number(item.amount);
+          expense_map.set(item.type_id, {
+            total_amount: expense_map.has(item.type_id)
+              ? Number(expense_map.get(item.type_id).total_amount) +
                 Number(item.amount)
               : Number(item.amount),
-            typeName: item.type_name,
+            type_name: item.type_name,
             typeId: item.type_id,
           });
         } else {
-          totalIncome += Number(item.amount);
-          incomeMap.set(item.type_id, {
-            totalAmount: incomeMap.has(item.type_id)
-              ? Number(incomeMap.get(item.type_id).totalAmount) +
+          total_income += Number(item.amount);
+          income_map.set(item.type_id, {
+            total_amount: income_map.has(item.type_id)
+              ? Number(income_map.get(item.type_id).total_amount) +
                 Number(item.amount)
               : Number(item.amount),
-            typeName: item.type_name,
+            type_name: item.type_name,
             typeId: item.type_id,
           });
         }
       });
-      console.log("expenseMap: ", expenseMap);
-      ctx.body = {
-        code: 200,
-        message: "请求成功",
-        data: {
-          expenseList: [...expenseMap.values()].sort(
-            (a, b) => b.totalAmount - a.totalAmount
-          ),
-          incomeList: [...incomeMap.values()].sort(
-            (a, b) => b.totalAmount - a.totalAmount
-          ),
-          totalExpense,
-          totalIncome,
-        },
+      const data = {
+        expense_list: [...expense_map.values()].sort(
+          (a, b) => b.total_amount - a.total_amount
+        ),
+        income_list: [...income_map.values()].sort(
+          (a, b) => b.total_amount - a.total_amount
+        ),
+        total_expense,
+        total_income,
       };
+      this.success(data);
     } catch (error) {
-      ctx.body = {
-        code: 500,
-        message: error,
-        data: null,
-      };
+      this.serviceError();
     }
   }
 }
