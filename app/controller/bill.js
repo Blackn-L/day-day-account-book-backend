@@ -266,7 +266,7 @@ class BillController extends BaseController {
                 Number(item.amount)
               : Number(item.amount),
             type_name: item.type_name,
-            typeId: item.type_id,
+            type_id: item.type_id,
           });
         } else {
           total_income += Number(item.amount);
@@ -276,7 +276,7 @@ class BillController extends BaseController {
                 Number(item.amount)
               : Number(item.amount),
             type_name: item.type_name,
-            typeId: item.type_id,
+            type_id: item.type_id,
           });
         }
       });
