@@ -247,9 +247,9 @@ class BillController extends BaseController {
       if (!decode || !date) return;
       const user_id = decode.id;
       const result = await ctx.service.bill.list(user_id);
-      // 根据时间参数，筛选出当月所有的账单数据
-      const start = dayjs(date).startOf("month").unix() * 1000; // 选择月份，月初时间
-      const end = dayjs(date).endOf("month").unix() * 1000; // 选择月份，月末时间
+      // 根据时间参数，筛选出当月所有的账单数
+      const start = dayjs(Number(date)).startOf("month").unix() * 1000; // 选择月份，月初时间
+      const end = dayjs(Number(date)).endOf("month").unix() * 1000; // 选择月份，月末时间
       const _monthData = result.filter(
         (item) => Number(item.date) >= start && Number(item.date) <= end
       );
