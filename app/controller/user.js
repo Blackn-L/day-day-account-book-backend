@@ -75,9 +75,10 @@ class UserController extends BaseController {
     const token = ctx.request.header.authorization;
     try {
       const decode = await app.jwt.verify(token, app.config.jwt.secret);
-      const user_info = await ctx.service.user.getUserByName(decode.username);
+      const user_info = await ctx.service.user.get(decode.username);
       this.success(user_info, "获取用户信息成功");
     } catch (error) {
+      console.log('error: ', error);
       this.serviceError();
     }
   }
@@ -90,7 +91,7 @@ class UserController extends BaseController {
     try {
       const decode = await app.jwt.verify(token, app.config.jwt.secret);
       if (!decode) return;
-      const user_info = await ctx.service.user.getUserByName(decode.username);
+      const user_info = await ctx.service.user.get(decode.username);
       if (!user_info) return;
       const result = await ctx.service.user.edit({
         ...user_info,
@@ -103,9 +104,11 @@ class UserController extends BaseController {
       };
       this.success(data, "编辑用户信息成功");
     } catch (error) {
+      console.log('error: ', error);
       this.serviceError();
     }
   }
 }
+
 
 module.exports = UserController;
