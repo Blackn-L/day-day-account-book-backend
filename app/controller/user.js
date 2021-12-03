@@ -78,7 +78,7 @@ class UserController extends BaseController {
       const user_info = await ctx.service.user.get(decode.username);
       this.success(user_info, "获取用户信息成功");
     } catch (error) {
-      console.log('error: ', error);
+      console.log("error: ", error);
       this.serviceError();
     }
   }
@@ -104,11 +104,45 @@ class UserController extends BaseController {
       };
       this.success(data, "编辑用户信息成功");
     } catch (error) {
-      console.log('error: ', error);
+      console.log("error: ", error);
+      this.serviceError();
+    }
+  }
+
+  // 更新密码
+  async updatePassword() {
+    const { ctx, app } = this;
+    const token = ctx.request.header.authorization;
+    const { oldPassword, newPassword } = ctx.request.body;
+    try {
+      const decode = await app.jwt.verify(token, app.config.jwt.secret);
+      if (!decode) return;
+      const user_info = await ctx.service.user.get(decode.username);
+      // 获取不到用户信息或者旧密码不一致
+      if (!user_info) {
+        this.paramsError("用户信息不存在");
+        return;
+      }
+      // 禁止 test 修改密码
+      if (user_info.username === "test") {
+        this.paramsError("test 账号不允许修改密码");
+        return;
+      }
+      if (user_info.password !== oldPassword) {
+        this.paramsError("旧密码错误");
+        return;
+      }
+
+      const result = await ctx.service.user.edit({
+        ...user_info,
+        password: newPassword,
+      });
+      this.success(null, "修改密码成功");
+    } catch (error) {
+      console.log("error: ", error);
       this.serviceError();
     }
   }
 }
-
 
 module.exports = UserController;
