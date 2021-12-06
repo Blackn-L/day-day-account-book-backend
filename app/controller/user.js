@@ -76,7 +76,13 @@ class UserController extends BaseController {
     try {
       const decode = await app.jwt.verify(token, app.config.jwt.secret);
       const user_info = await ctx.service.user.get(decode.username);
-      this.success(user_info, "获取用户信息成功");
+      // 只返回必须的信息
+      const _data = {
+        username: user_info.username,
+        avatar: user_info.avatar,
+        signature: user_info.signature,
+      };
+      this.success(_data, "获取用户信息成功");
     } catch (error) {
       console.log("error: ", error);
       this.serviceError();
