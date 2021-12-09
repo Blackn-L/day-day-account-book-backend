@@ -1,11 +1,11 @@
 const BaseController = require("./BaseController");
 const default_avatar =
-  "https://cdn.jsdelivr.net/gh/Blackn-L/Picture/blog/20211003210108.png";
+  "https://cdn.jsdelivr.net/gh/Blackn-L/Picture/blog/20211208224344.png";
 class UserController extends BaseController {
   // 注册
   async register() {
     const { ctx } = this;
-    const { username, password } = ctx.request.body;
+    const { username, password, avatar = default_avatar } = ctx.request.body;
 
     // 账号密码为空
     if (!username || !password) {
@@ -24,7 +24,7 @@ class UserController extends BaseController {
       const result = await ctx.service.user.register({
         username,
         password,
-        avatar: default_avatar,
+        avatar,
       });
       if (result) {
         this.success(null, "注册成功");
@@ -93,20 +93,28 @@ class UserController extends BaseController {
   async edit() {
     const { ctx, app } = this;
     const token = ctx.request.header.authorization;
-    const { signature = "" } = ctx.request.body;
+    const { signature = "", avatar = "" } = ctx.request.body;
     try {
       const decode = await app.jwt.verify(token, app.config.jwt.secret);
       if (!decode) return;
       const user_info = await ctx.service.user.get(decode.username);
       if (!user_info) return;
+      const _data = {
+        signature,
+        avatar,
+      };
+      if (!signature?.trim()) delete _data.signature;
+      if (!avatar?.trim()) delete _data.avatar;
       const result = await ctx.service.user.edit({
         ...user_info,
-        signature,
+        ..._data,
       });
+      if (!result) return;
       const data = {
         id: user_info.id,
         username: user_info.username,
-        signature,
+        signature: _data.signature || user_info.signature,
+        avatar: _data.avatar || user_info.avatar,
       };
       this.success(data, "编辑用户信息成功");
     } catch (error) {
